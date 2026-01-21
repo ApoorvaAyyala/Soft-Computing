@@ -1,35 +1,24 @@
-# Implementing an AND Gate using a Simple Perceptron
-
 import numpy as np
 
-class Perceptron:
-    def __init__(self, num_inputs, learning_rate=0.1, epochs=10):
-        self.learning_rate = learning_rate
-        self.epochs = epochs
-        # Initialize weights to small random values and bias to 0
-        self.weights = np.random.rand(num_inputs)
-        self.bias = 0
+# Parameters for the perceptron
+num_inputs = 2
+learning_rate = 0.1
+epochs = 10
 
-    def activate(self, summation):
-        # Step function activation
-        return 1 if summation >= 0 else 0
+# Initialize weights and bias
+weights = np.random.rand(num_inputs)
+bias = 0
 
-    def predict(self, inputs):
-        # Calculate the weighted sum of inputs and apply activation function
-        summation = np.dot(inputs, self.weights) + self.bias
-        return self.activate(summation)
+# Activation function (Step function using NumPy)
+def activate(summation):
+    return (summation >= 0).astype(int)
 
-    def train(self, training_inputs, labels):
-        for _ in range(self.epochs):
-            for inputs, label in zip(training_inputs, labels):
-                prediction = self.predict(inputs)
-                # Update weights and bias based on the error
-                self.weights += self.learning_rate * (label - prediction) * inputs
-                self.bias += self.learning_rate * (label - prediction)
-        print(f"Final Weights: {self.weights}")
-        print(f"Final Bias: {self.bias}")
+# Prediction function
+def predict(inputs, weights, bias):
+    summation = np.dot(inputs, weights) + bias
+    return activate(summation)
 
-# Define the training data for an AND gate
+# Training Data for AND Gate
 training_inputs = np.array([
     [0, 0],
     [0, 1],
@@ -39,18 +28,33 @@ training_inputs = np.array([
 
 labels = np.array([0, 0, 0, 1])
 
-# Create a perceptron with 2 inputs
-perceptron = Perceptron(num_inputs=2, learning_rate=0.1, epochs=100)
-
 # Train the perceptron
-print("Training Perceptron for AND gate...")
-perceptron.train(training_inputs, labels)
-print("Training complete.")
+print("Training Perceptron for AND gate\n")
+for epoch in range(epochs):
+    error_count = 0
+    for inputs, label in zip(training_inputs, labels):
+        prediction = predict(inputs, weights, bias)
+        
+        # Update weights and bias based on the error
+        error = label - prediction
+        if error != 0:
+            error_count += 1
+        weights += learning_rate * error * inputs
+        bias += learning_rate * error
+    
+    # Print progress for each epoch
+    print(f"Epoch {epoch + 1}/{epochs}: Weights={weights}, Bias={bias}, Errors={error_count}")
+    # If no errors, perceptron has converged, stop training
+    if error_count == 0:
+        print(f"Converged after {epoch + 1} epochs.")
+        break
 
-# To test if the trained perceptron correctly implements the AND gate logic.
+print(f"\nFinal Weights: {weights}")
+print(f"Final Bias: {bias}")
+print("\nTraining complete.")
 
-print("\nTesting Perceptron (AND Gate Logic):")
-
+# Testing the Perceptron
+print("\nTesting Perceptron, AND Gate Logic:")
 test_cases = np.array([
     [0, 0],
     [0, 1],
@@ -59,5 +63,5 @@ test_cases = np.array([
 ])
 
 for inputs in test_cases:
-    output = perceptron.predict(inputs)
+    output = predict(inputs, weights, bias)
     print(f"Inputs: {inputs[0]}, {inputs[1]} -> Output: {output}")
